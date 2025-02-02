@@ -1,0 +1,22 @@
+services:
+     optimization-php:
+          container_name: optimization-php
+          build:
+               context: .
+               dockerfile: Dockerfile
+          volumes: 
+               - ./app:/var/www/html
+               - ./logs:/var/log/apache2/
+          ports:
+               - 8888:8000
+     postgres:
+          container_name: postgres
+          image: postgres
+          ports:
+               - 5432:5432
+          volumes:
+               - ./postgres:/var/lib/postgres/data
+          environment:
+               POSTGRES_PASSWORD: password
+               POSTGRES_USER: postgres
+               POSTGRES_DB: db
