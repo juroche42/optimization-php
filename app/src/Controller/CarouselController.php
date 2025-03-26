@@ -13,31 +13,51 @@ use Symfony\Component\Routing\Attribute\Route;
 final class CarouselController extends AbstractController
 {
     #[Route('/carousel', name: 'app_carousel')]
-    public function index(GalaxyRepository $galaxyRepository, ModelesRepository $modelesRepository, ModelesFilesRepository $modelesFilesRepository, DirectusFilesRepository $directusFilesRepository): Response
+    public function index(
+        GalaxyRepository        $galaxyRepository,
+        ModelesRepository       $modelesRepository,
+        ModelesFilesRepository  $modelesFilesRepository,
+        DirectusFilesRepository $directusFilesRepository
+    ): Response
     {
         $galaxies = $galaxyRepository->findAll();
         $carousel = [];
 
-        foreach($galaxies as $galaxy) {
+        foreach ($galaxies as $galaxy) {
             $carouselItem = [
                 'title' => $galaxy->getTitle(),
                 'description' => $galaxy->getDescription(),
+                'files' => []
             ];
-            
+
             $modele = $modelesRepository->find($galaxy->getModele());
             $modelesFiles = $modelesFilesRepository->findBy([
                 'modeles_id' => $modele->getId()
             ]);
             $files = [];
 
-            foreach($modelesFiles as $modelesFile) {
+            foreach ($modelesFiles as $modelesFile) {
                 $file = $directusFilesRepository->find($modelesFile->getDirectusFilesId());
                 $files[] = $file;
+
+                if ($modele) {
+                    $modelesFiles = $modelesFilesRepository->findBy([
+                        'modeles_id' => $modele->getId()
+                    ]);
+
+                    foreach ($modelesFiles as $modelesFile) {
+                        $file = $directusFilesRepository->find($modelesFile->getDirectusFilesId());
+                        if ($file) {
+                            $carouselItem['files'][] = $file;
+                        }
+                    }
+                }
+                $carouselItem['files'] = $files;
+
+                $carousel[] = $carouselItem;
             }
-            $carouselItem['files'] = $files;
-            $carousel[] = $carouselItem;
         }
-        
+
         return $this->render('carousel/index.html.twig', [
             'carousel' => $carousel
         ]);
